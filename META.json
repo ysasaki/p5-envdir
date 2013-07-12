@@ -52,5 +52,19 @@
       }
    },
    "release_status" : "unstable",
-   "version" : "0.01"
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/ysasaki/p5-envdir/issues"
+      },
+      "homepage" : "https://github.com/ysasaki/p5-envdir",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/ysasaki/p5-envdir.git",
+         "web" : "https://github.com/ysasaki/p5-envdir"
+      }
+   },
+   "version" : "0.01",
+   "x_contributors" : [
+      "ysasaki <aloelight@gmail.com>"
+   ]
 }
