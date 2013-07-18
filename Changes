@@ -1,6 +1,7 @@
 Revision history for Perl extension EnvDir
 
 {{$NEXT}}
+    - Updates pod.
 
 0.04 2013-07-18T12:59:30Z
     - Changes the behavior of reading file that filesize equals zero.

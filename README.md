@@ -50,6 +50,10 @@ EnvDir - Modify environment variables according to files in a specified director
 EnvDir is a module like envdir(8). But this module does not reset all
 environments by default, updates only the value that file exists. If you want to reset all environment variables, you can use the `-clean` option.
 
+# SCRIPT
+
+This distribution contains envdir.pl. See [envdir.pl](http://search.cpan.org/perldoc?envdir.pl) for more details.
+
 # COPYRIGHT AND LICENSE
 
 Copyright (C) 2013 Yoshihiro Sasaki <ysasaki at cpan.org>

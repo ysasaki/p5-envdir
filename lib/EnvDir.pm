@@ -234,6 +234,10 @@ EnvDir - Modify environment variables according to files in a specified director
 EnvDir is a module like envdir(8). But this module does not reset all
 environments by default, updates only the value that file exists. If you want to reset all environment variables, you can use the C<-clean> option.
 
+=head1 SCRIPT
+
+This distribution contains envdir.pl. See L<envdir.pl> for more details.
+
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (C) 2013 Yoshihiro Sasaki E<lt>ysasaki at cpan.orgE<gt>
