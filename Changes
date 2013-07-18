@@ -2,6 +2,9 @@ Revision history for Perl extension EnvDir
 
 {{$NEXT}}
 
+0.06 2013-07-18T13:30:11Z
+    - Uploads to CPAN
+
 0.05 2013-07-18T13:13:28Z
     - Updates pod.
 

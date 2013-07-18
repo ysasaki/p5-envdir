@@ -6,7 +6,7 @@ use Carp ();
 use File::Spec;
 use Storable ();
 
-our $VERSION = "0.05";
+our $VERSION = "0.06";
 our $DEFAULT_ENVDIR = File::Spec->catdir( File::Spec->curdir, 'env' );
 
 use constant MARK_DELETE => '__MARK_DELETE__';
