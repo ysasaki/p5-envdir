@@ -1,5 +1,5 @@
 {
-   "abstract" : "Load environment values from directory",
+   "abstract" : "Modify environment variables according to files in a specified directory",
    "author" : [
       "Yoshihiro Sasaki <ysasaki at cpan.org>"
    ],
@@ -42,6 +42,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Storable" : "2.15",
             "perl" : "5.008005"
          }
       },
@@ -63,7 +64,7 @@
          "web" : "https://github.com/ysasaki/p5-envdir"
       }
    },
-   "version" : "0.02",
+   "version" : "0.03",
    "x_contributors" : [
       "ysasaki <aloelight@gmail.com>"
    ]

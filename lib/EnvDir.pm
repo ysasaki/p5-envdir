@@ -6,7 +6,7 @@ use Carp ();
 use File::Spec;
 use Storable ();
 
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 our $DEFAULT_ENVDIR = File::Spec->catdir( File::Spec->curdir, 'env' );
 
 sub new {
@@ -164,17 +164,17 @@ __END__
 
 =head1 NAME
 
-EnvDir - Load environment values from directory
+EnvDir - Modify environment variables according to files in a specified directory
 
 =head1 SYNOPSIS
 
-    # load from ./env
+    # Load environment variables from ./env
     use EnvDir -autoload;
 
-    # specify a directory
+    # You can specify a directory.
     use EnvDir -autoload => '/path/to/dir';
 
-    # lexical change when using a guard object.
+    # envdir function returns a guard object.
     use EnvDir 'envdir';
 
     $ENV{PATH} = '/bin';
