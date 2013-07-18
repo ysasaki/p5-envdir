@@ -33,10 +33,22 @@ EnvDir - Load environment values from directory
         }
     }
 
+    # If you set the clean option,
+    # removes all current %ENV and set PATH=/bin:/usr/bin.
+    # This behavior is the same as envdir(8).
+    use EnvDir -autoload, -clean;
+
+    # in function style
+    use EnvDir 'envdir', -clean;
+
+    # OO style
+    use EnvDir;
+    my $envdir = EnvDir->new( clean => 1 );
+
 # DESCRIPTION
 
 EnvDir is a module like envdir(8). But this module does not reset all
-environments, updates only the value that file exists.
+environments by default, updates only the value that file exists. If you want to reset all environment variables, you can use the `-clean` option.
 
 # COPYRIGHT AND LICENSE
 

@@ -4,31 +4,64 @@ use strict;
 use warnings;
 use Carp ();
 use File::Spec;
+use Storable ();
 
-our $VERSION = "0.01";
-
+our $VERSION = "0.02";
 our $DEFAULT_ENVDIR = File::Spec->catdir( File::Spec->curdir, 'env' );
-
-use constant MARK_DELETE => '__MARK_DELETE__';
 
 sub new {
     my $class = shift;
-    bless { depth => 0, cache => [], stack => [] }, $class;
+    my %args  = @_;
+    bless {
+        clean => 0,
+        depth => 0,
+        cache => [],
+        stack => [],
+        map { $_ => $args{$_} } qw(clean)
+    }, $class;
 }
 
+my $GLOBAL_INSTANCE;
 my @GLOBAL_GUARD;
+sub _instance {
+    my $class = shift;
+    $GLOBAL_INSTANCE ||= $class->new;
+    $GLOBAL_INSTANCE;
+}
 
 sub import {
     my $class = shift;
-    if ( scalar @_ > 0 and $_[0] eq '-autoload' ) {
-        shift;
-        my $self = $class->new;
-        push @GLOBAL_GUARD, $self->envdir( shift || $DEFAULT_ENVDIR );
+    my @args  = @_;
+
+    my $autoload = 0;
+    my $dir      = 0;
+    my $clean    = 0;
+    my $self;
+
+    while ( defined( my $arg = shift @args ) ) {
+        if ( $arg eq '-autoload' ) {
+            $self = $class->_instance;
+            $autoload = 1;
+
+            $dir = shift @args;
+            if ( $dir and $dir eq '-clean' ) {
+                push @_, $dir;
+                $dir = $DEFAULT_ENVDIR;
+            }
+        }
+        elsif ( $arg eq 'envdir' ) {
+            my $package = (caller)[0];
+            no strict 'refs';
+            *{"$package\::envdir"} = \&envdir;
+        }
+        elsif ( $arg eq '-clean' ) {
+            $self = $class->_instance;
+            $self->{clean} = 1;
+        }
     }
-    elsif ( $_[0] and $_[0] eq 'envdir' ) {
-        my $package = (caller)[0];
-        no strict 'refs';
-        *{"$package\::envdir"} = \&envdir;
+
+    if ($autoload) {
+        push @GLOBAL_GUARD, $self->envdir($dir);
     }
 }
 
@@ -37,7 +70,7 @@ sub envdir {
 
     unless ( ref $self and ref $self eq 'EnvDir' ) {
         $envdir = $self;
-        $self   = EnvDir->new;
+        $self = EnvDir->_instance;
     }
 
     $self->{depth} = scalar @{ $self->{stack} };
@@ -48,7 +81,8 @@ sub envdir {
     # from cache
     my @keys = keys %{ $self->{cache}->[$depth] };
     if ( scalar @keys ) {
-        $self->_push_stack( $self->_copy_env(@keys) );
+        $self->_push_stack;
+        $self->_clean_env if $self->{clean};
         $ENV{$_} = $self->{cache}->{$_} for @keys;
 
         return EnvDir::Guard->new( sub { $self->_revert if $self } );
@@ -64,9 +98,10 @@ sub envdir {
         $self->{cache}->[$depth]->{ uc $key } = $value;
     }
 
-    @keys = keys %{ $self->{cache}->[$depth] };
-    $self->_push_stack( $self->_copy_env(@keys) );
-    $ENV{$_} = $self->{cache}->[$depth]->{$_} for @keys;
+    $self->_push_stack;
+    $self->_clean_env if $self->{clean};
+    $ENV{$_} = $self->{cache}->[$depth]->{$_}
+      for keys %{ $self->{cache}->[$depth] };
 
     closedir $dh or Carp::carp "Cannot close $envdir: $!";
 
@@ -74,46 +109,25 @@ sub envdir {
 }
 
 sub _push_stack {
-    my $self         = shift;
-    my %previous_ENV = @_;
-    push @{ $self->{stack} }, \%previous_ENV;
+    my $self = shift;
+    push @{ $self->{stack} }, Storable::freeze( \%ENV );
 }
 
 sub _pop_stack {
     my $self = shift;
-    pop @{ $self->{stack} };
+    my $ENV = pop @{ $self->{stack} };
+    %{ Storable::thaw($ENV) };
 }
 
 sub _revert {
-    my $self         = shift;
-    my $previous_ENV = $self->_pop_stack;
-    return unless $previous_ENV and scalar keys %$previous_ENV;
-
-    for my $key (%$previous_ENV) {
-        my $value = $previous_ENV->{$key};
-        if ( $value and $value eq MARK_DELETE ) {
-            delete $ENV{$key};
-        }
-        else {
-            $ENV{$key} = $value;
-        }
-    }
+    my $self = shift;
+    %ENV = $self->_pop_stack;
 }
 
-sub _copy_env {
+sub _clean_env {
     my $self = shift;
-    my @keys = @_;
-    my %previous_ENV;
-
-    for my $key (@keys) {
-        if ( exists $ENV{$key} ) {
-            $previous_ENV{$key} = delete $ENV{$key};
-        }
-        else {
-            $previous_ENV{$key} = MARK_DELETE;
-        }
-    }
-    return %previous_ENV;
+    %ENV = ();
+    $ENV{PATH} = '/bin:/usr/bin'; # the same as envdir(8)
 }
 
 sub _slurp {
@@ -183,10 +197,22 @@ EnvDir - Load environment values from directory
         }
     }
 
+    # If you set the clean option,
+    # removes all current %ENV and set PATH=/bin:/usr/bin.
+    # This behavior is the same as envdir(8).
+    use EnvDir -autoload, -clean;
+
+    # in function style
+    use EnvDir 'envdir', -clean;
+
+    # OO style
+    use EnvDir;
+    my $envdir = EnvDir->new( clean => 1 );
+
 =head1 DESCRIPTION
 
 EnvDir is a module like envdir(8). But this module does not reset all
-environments, updates only the value that file exists.
+environments by default, updates only the value that file exists. If you want to reset all environment variables, you can use the C<-clean> option.
 
 =head1 COPYRIGHT AND LICENSE
 
