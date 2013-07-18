@@ -9,6 +9,8 @@ use Storable ();
 our $VERSION = "0.03";
 our $DEFAULT_ENVDIR = File::Spec->catdir( File::Spec->curdir, 'env' );
 
+use constant MARK_DELETE => '__MARK_DELETE__';
+
 sub new {
     my $class = shift;
     my %args  = @_;
@@ -83,7 +85,7 @@ sub envdir {
     if ( scalar @keys ) {
         $self->_push_stack;
         $self->_clean_env if $self->{clean};
-        $ENV{$_} = $self->{cache}->{$_} for @keys;
+        $self->_update_env;
 
         return EnvDir::Guard->new( sub { $self->_revert if $self } );
     }
@@ -94,14 +96,18 @@ sub envdir {
     for my $key ( grep !/^\./, readdir($dh) ) {
         my $path = File::Spec->catfile( $envdir, $key );
         next if -d $path;
-        my $value = $self->_slurp($path);
-        $self->{cache}->[$depth]->{ uc $key } = $value;
+        if ( -s $path == 0 ) {
+            $self->{cache}->[$depth]->{ uc $key } = MARK_DELETE;
+        }
+        else {
+            my $value = $self->_slurp($path);
+            $self->{cache}->[$depth]->{ uc $key } = $value;
+        }
     }
 
     $self->_push_stack;
     $self->_clean_env if $self->{clean};
-    $ENV{$_} = $self->{cache}->[$depth]->{$_}
-      for keys %{ $self->{cache}->[$depth] };
+    $self->_update_env;
 
     closedir $dh or Carp::carp "Cannot close $envdir: $!";
 
@@ -128,6 +134,20 @@ sub _clean_env {
     my $self = shift;
     %ENV = ();
     $ENV{PATH} = '/bin:/usr/bin'; # the same as envdir(8)
+}
+
+sub _update_env {
+    my $self    = shift;
+    my $new_env = $self->{cache}->[ $self->{depth} ];
+    for ( keys %$new_env ) {
+        my $value = $new_env->{$_};
+        if ( $value and $value eq MARK_DELETE ) {
+            delete $ENV{$_};
+        }
+        else {
+            $ENV{$_} = $value;
+        }
+    }
 }
 
 sub _slurp {
