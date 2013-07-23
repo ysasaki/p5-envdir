@@ -1,6 +1,7 @@
 Revision history for Perl extension EnvDir
 
 {{$NEXT}}
+    - Uses double quote instead of single quote in t/10_envdir_pl.t.
 
 0.06 2013-07-18T13:30:11Z
     - Uploads to CPAN
