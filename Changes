@@ -1,6 +1,8 @@
 Revision history for Perl extension EnvDir
 
 {{$NEXT}}
+
+0.08 2013-07-25T04:39:09Z
     - Skips t/10_envdir_pl.t in MSWin32.
 
 0.07 2013-07-23T04:49:26Z
